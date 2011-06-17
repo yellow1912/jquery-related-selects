@@ -1,11 +1,11 @@
 /*
- * jQuery Related Selects plug-in 1.1
+ * jQuery Related Selects plug-in 1.2
  *
  * http://www.erichynds.com/jquery/jquery-related-dependent-selects-plugin/
- * http://github.com/ehynds/jquery-related-selects
- *
+ * original: http://github.com/ehynds/jquery-related-selects
+ * fork: https://github.com/yellow1912/jquery-related-selects
  * Copyright (c) 2009 Eric Hynds
- *
+ * 
  * Dual licensed under the MIT and GPL licenses:
  *   http://www.opensource.org/licenses/mit-license.php
  *   http://www.gnu.org/licenses/gpl.html
@@ -29,7 +29,7 @@
 		}
 		
 		// make array of select names
-		$.each(opts.selects, function(){
+		$.each(opts.selects, function(key, value){
 			selects.push(key);
 		});
 		
@@ -38,10 +38,10 @@
 	
 		// go through each select box & settings passed into options
 		$.each(opts.selects, function(elem,o){
-			var $select = $context.find("select[name='" + elem + "']"), // jquery ref to this select box
-				$next = next(elem), // the select box after this one
-				selectedValue = $select.val(); // currently selected value
-		
+			var $select = $context.find("select[name='" + elem + "']"), // jquery ref to this select box			
+			$next = next(elem), // the select box after this one
+			selectedValue = $select.val(); // currently selected value
+			
 			// extend element-specific options
 			// set the defaultOptionText to whatever was passed in or the option where value is blank.
 			o = $.extend({
@@ -90,7 +90,7 @@
 				resetAfter(elem);
 			
 				// populate the next select
-				populate($select,$next,o);
+				populate($select,$next,o,value);
 			
 			// otherwise, make all the selects after this one disabled and select the first option
 			} else if($next){
@@ -98,7 +98,7 @@
 			}
 		}
 		
-		function populate($caller,$select,o){
+		function populate($caller,$select,o,value){
 			var selectors = [], params;
 		
 			// build a selector for each select box in this context
@@ -112,44 +112,53 @@
 			// disable this select box, add loading msg
 			$select.attr('disabled', 'disabled').html('<option value="">' + o.loadingMessage + '</option>');
 		
-			// perform ajax request
-			$.ajax({
-				beforeSend: function(){ o.onLoadingStart.call($select); },
-				complete: function(){ o.onLoadingEnd.call($select); },
-				dataType: o.dataType,
-				data: params,
-				url: o.onChangeLoad,
-				success: function(data){
-					var html = [], defaultOptionText = $select.data('defaultOption');
-					
-					// set the default option in the select.
-					if(defaultOptionText.length > 0){
-						html.push('<option value="" selected="selected">' + defaultOptionText + '</option>');
-					}
-					
-					// if the value returned from the ajax request is valid json and isn't empty
-					if(o.dataType === 'json' && typeof data === 'object' && data){
-					
-						// build the options
-						$.each(data, function(i,item){
-							html.push('<option value="'+i+'">' + item + '</option>');
-						});
+			if(typeof o.onChangeLoad == 'function'){
+				html = o.onChangeLoad($caller,$select,o, params, value);
+				// build the options		
 
-						$select.html( html.join('') ).removeAttr('disabled');
-				
-					// html datatype
-					} else if(o.dataType === 'html' && $.trim(data).length > 0){
-						html.push($.trim(data));
-						$select.html( html.join('') ).removeAttr('disabled');
-				
-					// if the response is invalid/empty, reset the default option and fire the onEmptyResult callback
-					} else {
-						$select.html( html.join('') );
-						if(!o.disableIfEmpty){ $select.removeAttr('disabled'); }
-						o.onEmptyResult.call($caller);
+				$select.html( html.join('') ).removeAttr('disabled');
+			}
+			else{
+				// perform ajax request
+				$.ajax({
+					beforeSend: function(){ o.onLoadingStart.call($select); },
+					complete: function(){ o.onLoadingEnd.call($select); },
+					dataType: o.dataType,
+					data: params,
+					url: o.onChangeLoad,
+					success: function(data){
+						var html = [], defaultOptionText = $select.data('defaultOption');
+						
+						// set the default option in the select.
+						if(defaultOptionText.length > 0){
+							html.push('<option value="" selected="selected">' + defaultOptionText + '</option>');
+						}
+						
+						// if the value returned from the ajax request is valid json and isn't empty
+						if(o.dataType === 'json' && typeof data === 'object' && data){
+						
+							// build the options
+							$.each(data, function(i,item){
+								html.push('<option value="'+item.value+'">' + item.name + '</option>');
+							});
+
+							$select.html( html.join('') ).removeAttr('disabled');
+					
+						// html datatype
+						} else if(o.dataType === 'html' && $.trim(data).length > 0){
+							html.push($.trim(data));
+							$select.html( html.join('') ).removeAttr('disabled');
+					
+						// if the response is invalid/empty, reset the default option and fire the onEmptyResult callback
+						} else {
+							$select.html( html.join('') );
+							if(!o.disableIfEmpty){ $select.removeAttr('disabled'); }
+							o.onEmptyResult.call($caller);
+						}
 					}
-				}
-			});
+				});
+			}
+			
 		}
 	
 		function isPopulated($select){
@@ -200,4 +209,3 @@
 	};
 
 })(jQuery);
-

@@ -50,6 +50,11 @@ The type of data the server will return.  Either 'json' or 'html'.
 
 Required.  The file to call to retrieve data when a select box is changed.
 
+Note: 
+onChangeLoad can also be a function, in this case you are free to process the data however you like, but you must returned the html of all the options for the select
+As a function, onChangeLoad will accept these parameters: caller,select,options, params, selected_value
+Please also note that if onChangeLoad is a function then other related option settings such as dataType, onLoadingEnd etc... will be useless
+
 > loadingMessage
 
 Optional.  The text to change the sibling select box to during the AJAX request.  Defaults to &quot;Loading, please wait...&quot;.
