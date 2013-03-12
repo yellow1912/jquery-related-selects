@@ -138,8 +138,8 @@
 						if(o.dataType === 'json' && typeof data === 'object' && data){
 						
 							// build the options
-							$.each(data, function(i,item){
-								html.push('<option value="'+item.value+'">' + item.name + '</option>');
+							$.each(data, function(value,name){
+								html.push('<option value="'+value+'">' + name + '</option>');
 							});
 
 							$select.html( html.join('') ).removeAttr('disabled');
